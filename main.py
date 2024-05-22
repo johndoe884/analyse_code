@@ -155,7 +155,7 @@ async def analyse(request: AnalysisRequest):
     analysis_results["total_profit_loss"] = total_profit_loss
     analysis_results["chart_url"] = chart_url
 
-    return {"message": "Analysis completed successfully."}
+    return {"data": analysis_results}
 
 
 if __name__ == "__main__":
