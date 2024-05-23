@@ -129,6 +129,11 @@ def plot_signals(data, var_results):
     return f"data:image/png;base64,{img_str}"
 
 
+@app.get("/status")
+def status(request):
+    return {"status": True}
+
+
 @app.post("/analyse")
 async def analyse(request: AnalysisRequest):
     symbol = "AMZN"
