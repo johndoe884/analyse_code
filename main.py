@@ -130,7 +130,7 @@ def plot_signals(data, var_results):
 
 
 @app.get("/status")
-def status(request):
+def status():
     return {"status": True}
 
 
