@@ -9,6 +9,7 @@ from pydantic import BaseModel
 import matplotlib.pyplot as plt
 import io
 import base64
+import numpy as np
 
 yf.pdr_override()
 
@@ -121,12 +122,28 @@ def plot_signals(data, var_results):
     buf = io.BytesIO()
     plt.savefig(buf, format="png")
     buf.seek(0)
-
-    with open("plot.png", "wb") as f:
-        f.write(buf.getbuffer())
     img_str = base64.b64encode(buf.read()).decode("utf-8")
     plt.close()
     return f"data:image/png;base64,{img_str}"
+
+
+def convert_to_serializable(data):
+    if isinstance(data, np.integer):
+        return int(data)
+    elif isinstance(data, np.floating):
+        return float(data)
+    elif isinstance(data, np.ndarray):
+        return data.tolist()
+    elif isinstance(data, pd.Timestamp):
+        return data.isoformat()
+    elif isinstance(data, pd.DataFrame):
+        return data.to_dict(orient="list")
+    elif isinstance(data, dict):
+        return {key: convert_to_serializable(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [convert_to_serializable(item) for item in data]
+    else:
+        return data
 
 
 @app.get("/status")
@@ -154,13 +171,13 @@ async def analyse(request: AnalysisRequest):
     )
     chart_url = plot_signals(data, var_results)
 
-    analysis_results["data"] = data
-    analysis_results["var_results"] = var_results
-    analysis_results["profit_loss"] = profit_loss
-    analysis_results["total_profit_loss"] = total_profit_loss
+    analysis_results["data"] = convert_to_serializable(data)
+    analysis_results["var_results"] = convert_to_serializable(var_results)
+    analysis_results["profit_loss"] = convert_to_serializable(profit_loss)
+    analysis_results["total_profit_loss"] = convert_to_serializable(total_profit_loss)
     analysis_results["chart_url"] = chart_url
 
-    return {"data": analysis_results}
+    return {"analysis_results": analysis_results}
 
 
 if __name__ == "__main__":
